@@ -2,14 +2,14 @@ package com.richter.money.qif;
 
 import java.math.BigDecimal;
 
-public class SplitTransaction {
+public class QifSplitTransaction {
 
-	private final Transaction transaction;
+	private final QifTransaction transaction;
 	private String category;
 	private String memo;
 	private BigDecimal amount;
 
-	public SplitTransaction(Transaction transaction) {
+	public QifSplitTransaction(QifTransaction transaction) {
 		this.transaction = transaction;
 	}
 
@@ -37,7 +37,7 @@ public class SplitTransaction {
 		return amount;
 	}
 
-	public Transaction getTransaction() {
+	public QifTransaction getTransaction() {
 		return transaction;
 	}
 
