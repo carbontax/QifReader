@@ -101,4 +101,13 @@ public class QifCashTransaction extends QifTransaction {
 		currentSplitTransaction.setMemo(splitMemo);
 	}
 	
+	public String toCsv(String dateFormat) {
+		return String.format("%s,%s,%s,%s,%s", getDate().toString(dateFormat), empty(getCategory()),
+		        empty(getPayee()), getTotal(), empty(getMemo()));
+	}
+	
+	private String empty(String value) {
+		return value == null ? "" : value;
+	}
+
 }

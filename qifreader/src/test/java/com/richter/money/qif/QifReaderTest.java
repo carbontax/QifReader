@@ -1,17 +1,19 @@
 package com.richter.money.qif;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.util.List;
 
 import org.joda.time.LocalDate;
 import org.junit.Before;
 import org.junit.Test;
-
 
 public class QifReaderTest {
 
@@ -20,27 +22,49 @@ public class QifReaderTest {
 	public static final String SIMPLE_CASH_QIF = "!Type:Cash\nD03/03/10\nT-379.00\nPCITY OF SPRINGFIELD\n^\n";
 	public static final String SIMPLE_INVESTMENT_QIF = "!Type:Invst\nD12/21/07\nNBuy\nYIBM\nT11010.00\nI110.10\nQ100\nMPurchase of 100 shares of IBM stock on 21 December 2007 at $110.10 per share\n^\n";
 	private QifReader testObj;
+	private int investmentCount;
+	private int transactionCount;
 
 	@Before
 	public void setUp() throws Exception {
+		investmentCount = 0;
+		transactionCount = 0;
 		testObj = createQifReader(SIMPLE_BANK_QIF);
 	}
 
 	private QifReader createQifReader(String qifString) {
 		InputStream buffer = new ByteArrayInputStream(qifString.getBytes());
-		return new QifReader(new InputStreamReader(buffer));
+		QifReader qifReader = new QifReader(new InputStreamReader(buffer));
+		addListener(qifReader);
+		return qifReader;
 	}
-	
+
+	private void addListener(QifReader qifReader) {
+		qifReader.addTranasctionListener(new TransactionListener() {
+
+			public void onTransaction(QifTransaction transaction) {
+				if (transaction instanceof QifCashTransaction) {
+					transactionCount++;
+				}
+				if (transaction instanceof QifInvestment) {
+					investmentCount++;
+				}
+			}
+		});
+	}
+
 	private QifReader createQifReaderFromFile(String filename) throws Exception {
-		return new QifReader(filename);
+		QifReader qifReader = new QifReader(filename);
+		addListener(qifReader);
+		return qifReader;
 	}
-	
+
 	@Test
 	public void getAccountType_WhenCashAccount() throws Exception {
 		testObj = createQifReader(SIMPLE_CASH_QIF);
 		assertEquals(QifType.CASH, testObj.getQifType());
 	}
-	
+
 	@Test
 	public void getTransactions() throws Exception {
 		assertEquals(QifType.BANK, testObj.getQifType());
@@ -51,36 +75,39 @@ public class QifReaderTest {
 		assertEquals(new BigDecimal("-379.00"), transaction.getTotal());
 		assertEquals("CITY OF SPRINGFIELD", transaction.getPayee());
 	}
-	
+
 	@Test
 	public void getTransactions_WhenComplexQif() throws Exception {
 		testObj = createQifReader(COMPLEX_BANK_QIF);
 		List<QifCashTransaction> transactions = testObj.getTransactions();
 		assertEquals(3, transactions.size());
+		assertEquals(3, transactionCount);
+		assertEquals(0, investmentCount);
+
 		QifCashTransaction transaction = transactions.get(0);
 		assertEquals(new LocalDate(1994, 6, 1), transaction.getDate());
 		assertEquals(new BigDecimal("-1000.00"), transaction.getTotal());
 		assertEquals("Bank Of Mortgage", transaction.getPayee());
 		assertEquals(2, transaction.getSplits().size());
-		
+
 		QifSplitTransaction splitTransaction = transaction.getSplits().get(0);
 		assertSame(transaction, splitTransaction.getTransaction());
 		assertEquals(null, splitTransaction.getMemo());
 		assertEquals(new BigDecimal("-253.64"), splitTransaction.getAmount());
 		assertEquals("linda", splitTransaction.getCategory());
-		
+
 		splitTransaction = transaction.getSplits().get(1);
 		assertSame(transaction, splitTransaction.getTransaction());
 		assertEquals(null, splitTransaction.getMemo());
 		assertEquals(new BigDecimal("-746.36"), splitTransaction.getAmount());
 		assertEquals("Mort Int", splitTransaction.getCategory());
-		
+
 		transaction = transactions.get(1);
 		assertEquals(new LocalDate(1994, 6, 2), transaction.getDate());
 		assertEquals(new BigDecimal("75.00"), transaction.getTotal());
 		assertEquals("Deposit", transaction.getPayee());
 		assertEquals(0, transaction.getSplits().size());
-		
+
 		transaction = transactions.get(2);
 		assertEquals(new LocalDate(1994, 6, 3), transaction.getDate());
 		assertEquals(new BigDecimal("-10.00"), transaction.getTotal());
@@ -92,17 +119,26 @@ public class QifReaderTest {
 		assertEquals("", transaction.getAddress().get(3));
 		assertEquals("", transaction.getAddress().get(4));
 		assertEquals("", transaction.getAddress().get(5));
-		
+
 		assertEquals(0, transaction.getSplits().size());
+
+		StringWriter writer = new StringWriter();
+		testObj.writeCsv(new PrintWriter(writer));
+		assertEquals("DATE,CATEGORY,PAYEE,TOTAL,MEMO\n6/1/94,linda,Bank Of Mortgage,-1000.00,\n6/2/94,,Deposit,75.00,\n6/3/94,Entertain,Anthony Hopkins,-10.00,Film\n", writer
+		        .getBuffer().toString());
+
 	}
-	
+
 	@Test
 	public void getInvestment_WithSimpleInvestment() throws Exception {
 		testObj = createQifReader(SIMPLE_INVESTMENT_QIF);
 		testObj.setDateFormat("MM/dd/yy");
 		List<QifInvestment> investments = testObj.getInvestments();
+
 		assertEquals(1, investments.size());
-		
+		assertEquals(0, transactionCount);
+		assertEquals(1, investmentCount);
+
 		QifInvestment investment = investments.get(0);
 		assertEquals(new LocalDate(2007, 12, 21), investment.getDate());
 		assertEquals("Purchase of 100 shares of IBM stock on 21 December 2007 at $110.10 per share", investment.getMemo());
@@ -111,5 +147,9 @@ public class QifReaderTest {
 		assertEquals(new BigDecimal("11010.00"), investment.getTotal());
 		assertEquals("Buy", investment.getAction());
 		assertEquals("IBM", investment.getSecurity());
+		StringWriter writer = new StringWriter();
+		testObj.writeCsv(new PrintWriter(writer));
+		assertEquals("DATE,CATEGORY,PAYEE,TOTAL,MEMO\n", writer.getBuffer().toString());
 	}
+
 }

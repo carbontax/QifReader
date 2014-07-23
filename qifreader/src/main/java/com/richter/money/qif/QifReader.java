@@ -5,9 +5,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.Reader;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import org.joda.time.format.DateTimeFormat;
@@ -15,41 +18,85 @@ import org.joda.time.format.DateTimeFormatter;
 
 public class QifReader extends Reader {
 
+	public enum LoadStatus {
+		LOADED, NOT_STARTED, QIF_TYPE_LOADED
+	}
+
 	public static final String DEFAULT_DATE_FORMAT = "M/d/yy";
+	private DateTimeFormatter formatter;
+	private final List<QifInvestment> investments = new ArrayList<QifInvestment>();
+	private LoadStatus loadStatus = LoadStatus.NOT_STARTED;
 	private QifType qifType = QifType.UNKNOWN;
 	private final BufferedReader reader;
-	private DateTimeFormatter formatter = DateTimeFormat.forPattern(DEFAULT_DATE_FORMAT);
+	private final List<QifCashTransaction> transactions = new ArrayList<QifCashTransaction>();
+	private Collection<TransactionListener> listeners = new HashSet<TransactionListener>();
 
 	public QifReader(File file) throws FileNotFoundException {
-		this(new FileReader(file));
+		this(new FileReader(file), DEFAULT_DATE_FORMAT);
+	}
+
+	public QifReader(File file, String dateFormat) throws FileNotFoundException {
+		this(new FileReader(file), dateFormat);
 	}
 
 	public QifReader(Reader reader) {
+		this(reader, DEFAULT_DATE_FORMAT);
+	}
+
+	public QifReader(Reader reader, String dateFormat) {
 		if (reader instanceof BufferedReader) {
 			this.reader = (BufferedReader) reader;
 		} else {
 			this.reader = new BufferedReader(reader);
 		}
-		readQifType();
+		setDateFormat(dateFormat);
+	}
+
+	public QifReader(String filename, String dateFormat) throws FileNotFoundException {
+		this(new File(filename));
 	}
 
 	public QifReader(String filename) throws FileNotFoundException {
-		this(new File(filename));
+		this(new File(filename), DEFAULT_DATE_FORMAT);
 	}
 
 	@Override
 	public void close() throws IOException {
 		reader.close();
 	}
-	
+
 	public List<QifInvestment> getInvestments() {
-		List<QifInvestment> investments = new ArrayList<QifInvestment>();
+		load();
+		return investments;
+	}
+
+	public QifType getQifType() {
+		readQifType();
+		return qifType;
+	}
+
+	public List<QifCashTransaction> getTransactions() {
+		load();
+		return transactions;
+	}
+
+	public void load() {
+		switch (getQifType()) {
+		case INVST:
+			loadInvestments();
+		default:
+			loadTransactions();
+		}
+	}
+
+	private List<QifInvestment> loadInvestments() {
 		try {
 			String line = reader.readLine();
 			QifInvestment investment = new QifInvestment();
 			while (line != null) {
 				if ("^".equals(line)) {
 					investments.add(investment);
+					fireOnTransactionHandler(investment);
 					investment = new QifInvestment();
 				} else {
 					processInvestmentDetail(investment, line);
@@ -62,34 +109,38 @@ public class QifReader extends Reader {
 		return investments;
 	}
 
-	public QifType getQifType() {
-		return qifType;
+	private void fireOnTransactionHandler(QifTransaction transaction) {
+		for (TransactionListener listener : listeners) {
+			listener.onTransaction(transaction);
+		}
 	}
 
-	public List<QifCashTransaction> getTransactions() {
-		List<QifCashTransaction> transactions = new ArrayList<QifCashTransaction>();
-		try {
-			String line = reader.readLine();
-			QifCashTransaction transaction = new QifCashTransaction();
-			while (line != null) {
-				if ("^".equals(line)) {
-					transactions.add(transaction);
-					transaction = new QifCashTransaction();
-				} else {
-					processTransactionDetail(transaction, line);
+	private void loadTransactions() {
+		if (loadStatus != LoadStatus.LOADED) {
+			try {
+				String line = reader.readLine();
+				QifCashTransaction transaction = new QifCashTransaction();
+				while (line != null) {
+					if ("^".equals(line)) {
+						transactions.add(transaction);
+						fireOnTransactionHandler(transaction);
+						transaction = new QifCashTransaction();
+					} else {
+						processTransactionDetail(transaction, line);
+					}
+					line = reader.readLine();
 				}
-				line = reader.readLine();
+				loadStatus = LoadStatus.LOADED;
+			} catch (Exception e) {
+				throw new QifReaderException(e);
 			}
-		} catch (Exception e) {
-			throw new QifReaderException(e);
 		}
-		return transactions;
 	}
 
 	public void processInvestmentDetail(QifInvestment investment, String line) {
 		char rowType = line.charAt(0);
 		String rowData = line.substring(1);
-		switch(rowType) {
+		switch (rowType) {
 		case 'D':
 			setDate(investment, rowData);
 			break;
@@ -113,25 +164,25 @@ public class QifReader extends Reader {
 			investment.setMemo(rowData);
 			break;
 		}
-		
+
 	}
-	
-	//D	Date
-	//T	Amount
-	//C	Cleared status
-	//N	Num (check or reference number)
-	//P	Payee
-	//M	Memo
-	//A	Address (up to five lines;the sixth line is an optional message)
-	//L	Category (Category/Subcategory/Transfer/Class)
-	//S	Category in split (Category/Transfer/Class)
-	//E	Memo in split
-	//$	Dollar amount of split
-	//^	End of entry
+
+	// D Date
+	// T Amount
+	// C Cleared status
+	// N Num (check or reference number)
+	// P Payee
+	// M Memo
+	// A Address (up to five lines;the sixth line is an optional message)
+	// L Category (Category/Subcategory/Transfer/Class)
+	// S Category in split (Category/Transfer/Class)
+	// E Memo in split
+	// $ Dollar amount of split
+	// ^ End of entry
 	public void processTransactionDetail(QifCashTransaction transaction, String line) {
 		char rowType = line.charAt(0);
 		String rowData = line.substring(1);
-		switch(rowType) {
+		switch (rowType) {
 		case 'D':
 			setDate(transaction, rowData);
 			break;
@@ -166,36 +217,39 @@ public class QifReader extends Reader {
 			transaction.setSplitAmount(rowData);
 			break;
 		}
-		
+
 	}
+
 	@Override
 	public int read(char[] cbuf, int off, int len) throws IOException {
 		return reader.read(cbuf, off, len);
 	}
 
 	private void readQifType() {
-		try {
-			String line = this.reader.readLine();
-			if (line.startsWith("!Type:")) {
-				this.qifType = QifType.valueOf(line.substring(6).toUpperCase());
-			} else {
-				throw new QifReaderException("File Format is not a QIF format");
+		if (loadStatus == LoadStatus.NOT_STARTED) {
+			try {
+				String line = this.reader.readLine();
+				if (line.startsWith("!Type:")) {
+					this.qifType = QifType.valueOf(line.substring(6).toUpperCase());
+				} else {
+					throw new QifReaderException("File Format is not a QIF format");
+				}
+				loadStatus = LoadStatus.QIF_TYPE_LOADED;
+			} catch (QifReaderException e) {
+				throw e;
+			} catch (Exception e) {
+				throw new QifReaderException(e);
 			}
-		} catch (QifReaderException e) {
-			throw e;
-		} catch (Exception e) {
-			throw new QifReaderException(e);
 		}
 	}
 
-	private void setTotal(QifTransaction transaction, String totalString) {
-		totalString = totalString.replace(",", "");
-		transaction.setTotal(new BigDecimal(totalString));
-	}
-	
 	private void setDate(QifTransaction transaction, String dateString) throws QifReaderException {
 		dateString = dateString.replace(" ", "");
 		transaction.setDate(formatter.parseLocalDate(dateString));
+	}
+
+	public void setDateFormat(String dateFormat) {
+		formatter = DateTimeFormat.forPattern(DEFAULT_DATE_FORMAT);
 	}
 
 	private void setPrice(QifInvestment investment, String priceString) {
@@ -208,8 +262,27 @@ public class QifReader extends Reader {
 		investment.setQuantity(new BigDecimal(quantityString));
 	}
 
-	public void setDateFormat(String dateFormat) {
-		formatter = DateTimeFormat.forPattern(DEFAULT_DATE_FORMAT);
+	private void setTotal(QifTransaction transaction, String totalString) {
+		totalString = totalString.replace(",", "");
+		transaction.setTotal(new BigDecimal(totalString));
 	}
+
+	public void addTranasctionListener(TransactionListener transactionListener) {
+		listeners.add(transactionListener);
+	}
+
+	public void writeCsv(PrintWriter writer) {
+		writeCsv(writer, DEFAULT_DATE_FORMAT);
+	}
+
+	public void writeCsv(PrintWriter writer, String dateFormat) {
+		writer.println("DATE,CATEGORY,PAYEE,TOTAL,MEMO");
+		for (QifTransaction transaction : getTransactions()) {
+			if (transaction instanceof QifCashTransaction) {
+				writer.println(((QifCashTransaction) transaction).toCsv(dateFormat));
+			}
+		}
+	}
+
 
 }
