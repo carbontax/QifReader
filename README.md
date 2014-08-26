@@ -3,13 +3,19 @@ QifReader
 
 Java implementation to read QIF files into Transaction object
 
+Features
+========
+1. Basic Transaction type as a List of Transactions
+2. Investment Transaction type
+3. Event Handling model to allow for large QIF files with smaller memory foot print
+4. 
+
 TODO
 ====
 
 1. Add Validation of input (eg. Splits must total)
-2. Add event handlers to support large QIF inputs
-3. Add Memorized Transaction Support
-4. Add convert to CSV format
+2. Add Memorized Transaction Support
+3. Separate Event Handling from List Handling
 
 EXAMPLE CODE
 ============
