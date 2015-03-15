@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.Reader;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -28,7 +27,6 @@ public class QifReader extends Reader {
 	private LoadStatus loadStatus = LoadStatus.NOT_STARTED;
 	private QifType qifType = QifType.UNKNOWN;
 	private final BufferedReader reader;
-	private final List<QifCashTransaction> transactions = new ArrayList<QifCashTransaction>();
 	private Collection<TransactionListener> listeners = new HashSet<TransactionListener>();
 
 	public QifReader(File file) throws FileNotFoundException {
@@ -75,11 +73,6 @@ public class QifReader extends Reader {
 		return qifType;
 	}
 
-	public List<QifCashTransaction> getTransactions() {
-		load();
-		return transactions;
-	}
-
 	public void load() {
 		switch (getQifType()) {
 		case INVST:
@@ -122,7 +115,6 @@ public class QifReader extends Reader {
 				QifCashTransaction transaction = new QifCashTransaction();
 				while (line != null) {
 					if ("^".equals(line)) {
-						transactions.add(transaction);
 						fireOnTransactionHandler(transaction);
 						transaction = new QifCashTransaction();
 					} else {
@@ -270,19 +262,5 @@ public class QifReader extends Reader {
 	public void addTranasctionListener(TransactionListener transactionListener) {
 		listeners.add(transactionListener);
 	}
-
-	public void writeCsv(PrintWriter writer) {
-		writeCsv(writer, DEFAULT_DATE_FORMAT);
-	}
-
-	public void writeCsv(PrintWriter writer, String dateFormat) {
-		writer.println("DATE,CATEGORY,PAYEE,TOTAL,MEMO");
-		for (QifTransaction transaction : getTransactions()) {
-			if (transaction instanceof QifCashTransaction) {
-				writer.println(((QifCashTransaction) transaction).toCsv(dateFormat));
-			}
-		}
-	}
-
 
 }

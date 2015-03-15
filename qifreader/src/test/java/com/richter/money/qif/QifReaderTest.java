@@ -68,9 +68,10 @@ public class QifReaderTest {
 	@Test
 	public void getTransactions() throws Exception {
 		assertEquals(QifType.BANK, testObj.getQifType());
-		List<QifCashTransaction> transactions = testObj.getTransactions();
+		QifReaderListDecorator listDecorator = new QifReaderListDecorator(testObj);
+		List<QifTransaction> transactions = listDecorator.getTransactions();
 		assertEquals(1, transactions.size());
-		QifCashTransaction transaction = transactions.get(0);
+		QifCashTransaction transaction = (QifCashTransaction)transactions.get(0);
 		assertEquals(new LocalDate(2010, 3, 3), transaction.getDate());
 		assertEquals(new BigDecimal("-379.00"), transaction.getTotal());
 		assertEquals("CITY OF SPRINGFIELD", transaction.getPayee());
@@ -79,12 +80,13 @@ public class QifReaderTest {
 	@Test
 	public void getTransactions_WhenComplexQif() throws Exception {
 		testObj = createQifReader(COMPLEX_BANK_QIF);
-		List<QifCashTransaction> transactions = testObj.getTransactions();
+		QifReaderListDecorator listDecorator = new QifReaderListDecorator(testObj);
+		List<QifTransaction> transactions = listDecorator.getTransactions();
 		assertEquals(3, transactions.size());
 		assertEquals(3, transactionCount);
 		assertEquals(0, investmentCount);
 
-		QifCashTransaction transaction = transactions.get(0);
+		QifCashTransaction transaction = (QifCashTransaction)transactions.get(0);
 		assertEquals(new LocalDate(1994, 6, 1), transaction.getDate());
 		assertEquals(new BigDecimal("-1000.00"), transaction.getTotal());
 		assertEquals("Bank Of Mortgage", transaction.getPayee());
@@ -102,13 +104,13 @@ public class QifReaderTest {
 		assertEquals(new BigDecimal("-746.36"), splitTransaction.getAmount());
 		assertEquals("Mort Int", splitTransaction.getCategory());
 
-		transaction = transactions.get(1);
+		transaction = (QifCashTransaction)transactions.get(1);
 		assertEquals(new LocalDate(1994, 6, 2), transaction.getDate());
 		assertEquals(new BigDecimal("75.00"), transaction.getTotal());
 		assertEquals("Deposit", transaction.getPayee());
 		assertEquals(0, transaction.getSplits().size());
 
-		transaction = transactions.get(2);
+		transaction = (QifCashTransaction)transactions.get(2);
 		assertEquals(new LocalDate(1994, 6, 3), transaction.getDate());
 		assertEquals(new BigDecimal("-10.00"), transaction.getTotal());
 		assertEquals("Anthony Hopkins", transaction.getPayee());
@@ -123,7 +125,7 @@ public class QifReaderTest {
 		assertEquals(0, transaction.getSplits().size());
 
 		StringWriter writer = new StringWriter();
-		testObj.writeCsv(new PrintWriter(writer));
+		listDecorator.writeCsv(new PrintWriter(writer));
 		assertEquals("DATE,CATEGORY,PAYEE,TOTAL,MEMO\n6/1/94,linda,Bank Of Mortgage,-1000.00,\n6/2/94,,Deposit,75.00,\n6/3/94,Entertain,Anthony Hopkins,-10.00,Film\n", writer
 		        .getBuffer().toString());
 
@@ -133,13 +135,12 @@ public class QifReaderTest {
 	public void getInvestment_WithSimpleInvestment() throws Exception {
 		testObj = createQifReader(SIMPLE_INVESTMENT_QIF);
 		testObj.setDateFormat("MM/dd/yy");
-		List<QifInvestment> investments = testObj.getInvestments();
+		QifReaderListDecorator listDecorator = new QifReaderListDecorator(testObj);
+		List<QifTransaction> transactions = listDecorator.getTransactions();
 
-		assertEquals(1, investments.size());
-		assertEquals(0, transactionCount);
-		assertEquals(1, investmentCount);
+		assertEquals(1, transactions.size());
 
-		QifInvestment investment = investments.get(0);
+		QifInvestment investment = (QifInvestment)transactions.get(0);
 		assertEquals(new LocalDate(2007, 12, 21), investment.getDate());
 		assertEquals("Purchase of 100 shares of IBM stock on 21 December 2007 at $110.10 per share", investment.getMemo());
 		assertEquals(new BigDecimal("100"), investment.getQuantity());
@@ -147,9 +148,6 @@ public class QifReaderTest {
 		assertEquals(new BigDecimal("11010.00"), investment.getTotal());
 		assertEquals("Buy", investment.getAction());
 		assertEquals("IBM", investment.getSecurity());
-		StringWriter writer = new StringWriter();
-		testObj.writeCsv(new PrintWriter(writer));
-		assertEquals("DATE,CATEGORY,PAYEE,TOTAL,MEMO\n", writer.getBuffer().toString());
 	}
 
 }
