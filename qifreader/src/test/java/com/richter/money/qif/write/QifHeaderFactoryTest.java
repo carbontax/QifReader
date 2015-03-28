@@ -10,7 +10,7 @@ public class QifHeaderFactoryTest {
 	@Test
 	public void testBank() {
 		QifHeader bankHeader = QifHeaderFactory.forType(QifType.BANK);
-		Assert.assertEquals("!Type:Bank", bankHeader.asHeader());
+		Assert.assertEquals("!Type:Bank", bankHeader.toString());
 	}
 
 }
