@@ -17,7 +17,13 @@ public class QifInvestmentRecord extends AbstractQifRecord {
 	@Override
 	public String formatTransaction() {
 		StringBuilder sb = new StringBuilder();
+		appendFieldValueToOutput("D", txn.getDate(), sb);
 		appendFieldValueToOutput("N", txn.getAction(), sb);
+		appendFieldValueToOutput("Y", txn.getSecurity(), sb);
+		appendFieldValueToOutput("I", txn.getPrice(), sb);
+		appendFieldValueToOutput("Q", txn.getQuantity(), sb);
+		appendFieldValueToOutput("T", txn.getTotal(), sb);
+		appendFieldValueToOutput("M", txn.getMemo(), sb);
 		return sb.toString();
 	}
 	
