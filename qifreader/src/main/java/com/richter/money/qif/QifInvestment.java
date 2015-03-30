@@ -13,6 +13,10 @@ public class QifInvestment extends QifTransaction {
 	public String getAction() {
 		return action;
 	}
+	
+	public BigDecimal getCommission() {
+		return commission;
+	}
 
 	public BigDecimal getPrice() {
 		return price;
