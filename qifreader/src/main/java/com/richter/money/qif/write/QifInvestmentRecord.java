@@ -23,6 +23,7 @@ public class QifInvestmentRecord extends AbstractQifRecord {
 		appendFieldValueToOutput("I", txn.getPrice(), sb);
 		appendFieldValueToOutput("Q", txn.getQuantity(), sb);
 		appendFieldValueToOutput("T", txn.getTotal(), sb);
+		appendFieldValueToOutput("O", txn.getCommission(), sb);
 		appendFieldValueToOutput("M", txn.getMemo(), sb);
 		return sb.toString();
 	}
