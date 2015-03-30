@@ -8,6 +8,7 @@ public class QifInvestment extends QifTransaction {
 	private BigDecimal price;
 	private BigDecimal quantity;
 	private String security;
+	private BigDecimal commission;
 
 	public String getAction() {
 		return action;
@@ -41,4 +42,7 @@ public class QifInvestment extends QifTransaction {
 		this.security = security;
 	}
 
+	public void setCommission(BigDecimal commission) {
+		this.commission = commission;
+	}
 }
