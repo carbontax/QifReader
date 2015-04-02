@@ -36,7 +36,7 @@ EXAMPLE CODE: READING
 
 Writing QIF Files
 =================
-Take an Account definition and a `List<QifInvestment>` and write a QIF format file.
+Take an Account definition and a `List<QifTransaction>` and write a QIF format file.
 
     QifAccount destinationAccount = new QifAccount(QifAccountTypeEnum.PORT,
 				"Brokerage X", "Securities held at Brokerage X", 
