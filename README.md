@@ -36,12 +36,13 @@ EXAMPLE CODE: READING
 
 Writing QIF Files
 =================
-Given a data source such as a `List<QifInvestment> txnList`, convert it to QifRecords 
-and write them out to a file.
+Take an Account definition and a `List<QifInvestment>` and write a QIF format file.
 
-    QifAccount destinationAccount = new QifAccount("My Brokerage Acct");
+    QifAccount destinationAccount = new QifAccount(QifAccountTypeEnum.PORT,
+				"Brokerage X", "Securities held at Brokerage X", 
+				BigDecimal.valueOf(1234.56d));
     OutputStream out = new FileOutputStream(new File("sample.qif"));
-    QifWriter writer = new QifWriter(destinationAccount, txnList.stream(), out);
-    
+    QifWriter writer = new QifWriter(out);
+    writer.write(destinationAccount, txnList.stream());
     
     
