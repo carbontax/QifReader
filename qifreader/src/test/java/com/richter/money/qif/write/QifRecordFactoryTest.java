@@ -26,7 +26,7 @@ public class QifRecordFactoryTest {
 		Assert.assertEquals(
 				"Invst record format",
 				"!Type:Invst\nD3/21/14\nNBuy\nYFoo Industries\nI25.66\nQ100\nT2595.95\nO29.95\nMMemo text\n^\n",
-				invstRecord.asFormattedRecord());
+				invstRecord.asFormattedRecord(null));
 	}
 
 	@Test
@@ -39,7 +39,7 @@ public class QifRecordFactoryTest {
 		QifRecord record = QifRecordFactory.forTransaction(acc);
 		Assert.assertEquals("Account record format", "!Type:Account\nN" + name
 				+ "\nD" + desc + "\nT" + QifAccountTypeEnum.PORT.getLabel()
-				+ "\nB" + balance + "\n^\n", record.asFormattedRecord());
+				+ "\nB" + balance + "\n^\n", record.asFormattedRecord(null));
 	}
 
 }

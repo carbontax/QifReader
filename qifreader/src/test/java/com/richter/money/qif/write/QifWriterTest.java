@@ -1,6 +1,5 @@
 package com.richter.money.qif.write;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -35,7 +34,7 @@ public class QifWriterTest {
 	}
 
 	@Test
-	public void testAccountRegister() throws IOException {
+	public void testAccountRegisterWithSingleTxn() throws IOException {
 		Writer writer = new StringWriter();
 		QifWriter qifWriter = new QifWriter(writer);
 		List<QifTransaction> txnList = new ArrayList<QifTransaction>();
@@ -45,7 +44,30 @@ public class QifWriterTest {
 				"Foo Portfolio", "My description", BigDecimal.valueOf(1000.07d));
 		qifWriter.write(account, txnList);
 
-		String expected = readTestSampleFile("src/test/resources/writer/invst_account.qif");
+		String expected = readTestSampleFile("src/test/resources/writer/invst_account_single.qif");
+		Assert.assertEquals("Test account", expected, writer.toString());
+	}
+
+	@Test
+	public void testAccountRegisterWithMultipleTxn() throws IOException {
+		Writer writer = new StringWriter();
+		QifWriter qifWriter = new QifWriter(writer);
+		List<QifTransaction> txnList = new ArrayList<QifTransaction>();
+		QifInvestment invst = buildInvst(10.952d, 100d, 9.95d);
+		invst.setMemo("Buy 100 FOOB for $10.952. Commission: $9.95");
+		txnList.add(invst);
+
+		invst = buildInvst(13.05d, 100d, 9.95d);
+		invst.setMemo("Sell 100 FOOB for capital gain. Commission: $9.95");
+		invst.setAction(QifInvestmentAction.SELL.getText());
+		invst.setDate(new LocalDate(2014, 4, 5));
+		txnList.add(invst);
+		
+		QifAccount account = new QifAccount(QifAccountTypeEnum.PORT,
+				"Foo Portfolio", "My description", BigDecimal.valueOf(1000.07d));
+		qifWriter.write(account, txnList);
+
+		String expected = readTestSampleFile("src/test/resources/writer/invst_account_multi.qif");
 		Assert.assertEquals("Test account", expected, writer.toString());
 	}
 
