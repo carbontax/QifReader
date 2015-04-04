@@ -8,10 +8,10 @@ public abstract class AbstractQifRecord implements QifRecord {
 	public final static String LINE_SEPARATOR = "\n";
 	public final static String END_OF_RECORD = "^";
 
-	public String asFormattedRecord(QifHeader previousHeader) {
+	public String asFormattedRecord(QifHeaderEnum previousHeader) {
 		StringBuilder sb = new StringBuilder();
 		if (previousHeader == null) {
-			sb.append(getHeader()).append(LINE_SEPARATOR);
+			sb.append(getHeader().getText()).append(LINE_SEPARATOR);
 		}
 		sb.append(formatTransaction()).append(LINE_SEPARATOR);
 
@@ -19,7 +19,7 @@ public abstract class AbstractQifRecord implements QifRecord {
 		return sb.toString();
 	}
 
-	public abstract QifHeader getHeader();
+	public abstract QifHeaderEnum getHeader();
 
 	public abstract String formatTransaction();
 

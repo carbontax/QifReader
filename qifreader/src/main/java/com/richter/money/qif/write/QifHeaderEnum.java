@@ -1,14 +1,13 @@
 package com.richter.money.qif.write;
 
-public enum QifInvestmentAction {
-	BUY("Buy"), SELL("Sell");
-	
+public enum QifHeaderEnum {
+	ACCOUNT("!Type:Account"), INVESTMENT("!Type:Invst");
 	private String text;
-	
-	private QifInvestmentAction(String text) {
+
+	private QifHeaderEnum(String text) {
 		this.text = text;
 	}
-	
+
 	public String getText() {
 		return text;
 	}

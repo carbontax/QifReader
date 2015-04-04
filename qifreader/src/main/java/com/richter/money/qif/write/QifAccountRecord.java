@@ -10,13 +10,8 @@ public class QifAccountRecord extends AbstractQifRecord {
 	}
 
 	@Override
-	public QifHeader getHeader() {
-		return new QifHeader() {
-			@Override
-			public String toString() {
-				return "!Type:Account";
-			}
-		};
+	public QifHeaderEnum getHeader() {
+		return QifHeaderEnum.ACCOUNT;
 	}
 
 	@Override

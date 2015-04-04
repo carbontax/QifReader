@@ -10,8 +10,8 @@ public class QifInvestmentRecord extends AbstractQifRecord {
 	}
 
 	@Override
-	public QifHeader getHeader() {
-		return new QifInvestmentHeader();
+	public QifHeaderEnum getHeader() {
+		return QifHeaderEnum.INVESTMENT;
 	}
 
 	@Override

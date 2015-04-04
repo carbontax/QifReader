@@ -16,6 +16,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.richter.money.qif.QifAccount;
+import com.richter.money.qif.QifInterestIncome;
 import com.richter.money.qif.QifInvestment;
 import com.richter.money.qif.QifTransaction;
 
@@ -26,7 +27,7 @@ public class QifWriterTest {
 		Writer writer = new StringWriter();
 		QifWriter qifWriter = new QifWriter(writer);
 		List<QifTransaction> txnList = new ArrayList<QifTransaction>();
-		QifAccount account = new QifAccount(QifAccountTypeEnum.PORT,
+		QifAccount account = new QifAccount(QifAccountTypeEnum.PORTFOLIO,
 				"Foo Portfolio", "My description", BigDecimal.valueOf(1000.07d));
 		qifWriter.write(account, txnList);
 		String expected = readTestSampleFile("src/test/resources/writer/invst_account_empty.qif");
@@ -40,7 +41,7 @@ public class QifWriterTest {
 		List<QifTransaction> txnList = new ArrayList<QifTransaction>();
 		QifInvestment invst = buildInvst(10.952d, 100d, 9.95d);
 		txnList.add(invst);
-		QifAccount account = new QifAccount(QifAccountTypeEnum.PORT,
+		QifAccount account = new QifAccount(QifAccountTypeEnum.PORTFOLIO,
 				"Foo Portfolio", "My description", BigDecimal.valueOf(1000.07d));
 		qifWriter.write(account, txnList);
 
@@ -62,8 +63,13 @@ public class QifWriterTest {
 		invst.setAction(QifInvestmentAction.SELL.getText());
 		invst.setDate(new LocalDate(2014, 4, 5));
 		txnList.add(invst);
-		
-		QifAccount account = new QifAccount(QifAccountTypeEnum.PORT,
+
+		QifInterestIncome ii = new QifInterestIncome(
+				QifAccountTypeEnum.PORTFOLIO, new LocalDate(2014, 4, 6),
+				BigDecimal.valueOf(0.12d));
+		txnList.add(ii);
+
+		QifAccount account = new QifAccount(QifAccountTypeEnum.PORTFOLIO,
 				"Foo Portfolio", "My description", BigDecimal.valueOf(1000.07d));
 		qifWriter.write(account, txnList);
 

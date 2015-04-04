@@ -7,7 +7,7 @@ package com.richter.money.qif.write;
  *
  */
 public enum QifAccountTypeEnum {
-	PORT("Port");
+	PORTFOLIO("Port");
 	
 	private String label;
 	

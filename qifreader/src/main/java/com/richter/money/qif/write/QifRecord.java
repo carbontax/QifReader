@@ -10,7 +10,7 @@ public interface QifRecord {
 	 *            null
 	 * @return
 	 */
-	String asFormattedRecord(QifHeader previousHeader);
+	String asFormattedRecord(QifHeaderEnum previousHeader);
 
 	/**
 	 * Return the header of the QIF Record. For example the record describing
@@ -19,6 +19,6 @@ public interface QifRecord {
 	 * 
 	 * @return
 	 */
-	QifHeader getHeader();
+	QifHeaderEnum getHeader();
 
 }
