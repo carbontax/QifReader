@@ -36,9 +36,10 @@ EXAMPLE CODE: READING
 
 Writing QIF Files
 =================
-Take an Account definition and a `List<QifTransaction>` and write a QIF format file.
+Take an Account definition and a `List<QifTransaction>` and write a QIF format file. 
+The current implementation supports writing to a single Account per file.
 
-    QifAccount destinationAccount = new QifAccount(QifAccountTypeEnum.PORT,
+    QifAccount destinationAccount = new QifAccount(QifAccountTypeEnum.PORTFOLIO,
 				"Brokerage X", "Securities held at Brokerage X", 
 				BigDecimal.valueOf(1234.56d));
     OutputStream out = new FileOutputStream(new File("sample.qif"));
