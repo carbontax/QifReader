@@ -22,7 +22,9 @@ public class QifRecordFactoryTest {
 		txn.setCommission(BigDecimal.valueOf(29.95));
 		txn.setMemo("Memo text");
 		txn.setTotal(BigDecimal.valueOf(2566.0d + 29.95d));
-		QifRecord invstRecord = QifRecordFactory.forTransaction(QifHeaderEnum.INVESTMENT, txn);
+		
+		QifRecordFactory factory = new QifRecordFactory(TestUtils.buildPortfolioAccount());
+		QifRecord invstRecord = factory.forTransaction(txn);
 		Assert.assertEquals(
 				"Invst record format",
 				"!Type:Invst\nD3/21/14\nNBuy\nYFoo Industries\nI25.66\nQ100\nT2595.95\nO29.95\nMMemo text\n^\n",
@@ -36,10 +38,10 @@ public class QifRecordFactoryTest {
 		BigDecimal balance = BigDecimal.valueOf(10507.33d);
 		QifAccount acc = new QifAccount(QifAccountTypeEnum.PORTFOLIO, name, desc,
 				balance);
-		QifRecord record = QifRecordFactory.forTransaction(QifHeaderEnum.ACCOUNT, acc);
+		QifAccountRecord record = new QifAccountRecord(acc);
 		Assert.assertEquals("Account record format", "!Type:Account\nN" + name
 				+ "\nD" + desc + "\nT" + QifAccountTypeEnum.PORTFOLIO.getLabel()
-				+ "\nB" + balance + "\n^\n", record.asFormattedRecord(null));
+				+ "\nB" + balance + "\n^\n", record.asFormattedRecord());
 	}
 
 }

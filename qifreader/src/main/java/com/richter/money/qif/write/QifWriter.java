@@ -15,10 +15,11 @@ public class QifWriter {
 	}
 	
 	public void write(QifAccount account, List<QifTransaction> txnSource) throws IOException {
-		writer.append(QifRecordFactory.forTransaction(QifHeaderEnum.ACCOUNT, account).asFormattedRecord(null));
+		writer.append(new QifAccountRecord(account).asFormattedRecord());
+		QifRecordFactory factory = new QifRecordFactory(account);
 		QifHeaderEnum header = null;
 		for(QifTransaction txn:txnSource) {
-			QifRecord record = QifRecordFactory.forTransaction(header, txn);
+			QifRecord record = factory.forTransaction(txn);
 			writer.append(record.asFormattedRecord(header));
 			header = record.getHeader();
 		}

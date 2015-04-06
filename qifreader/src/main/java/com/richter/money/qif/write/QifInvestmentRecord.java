@@ -4,7 +4,7 @@ import com.richter.money.qif.QifInvestment;
 
 public class QifInvestmentRecord extends AbstractQifRecord {
 	private QifInvestment txn;
-	
+
 	public QifInvestmentRecord(QifInvestment txn) {
 		this.txn = txn;
 	}
@@ -16,16 +16,57 @@ public class QifInvestmentRecord extends AbstractQifRecord {
 
 	@Override
 	public String formatTransaction() {
+		String txnString = null;
+		QifInvestmentAction action = QifInvestmentAction.forText(txn
+				.getAction());
+		switch (action) {
+		case DIV:
+			txnString = formatDividendTransaction();
+			break;
+		case TRANSFER_IN:
+		case TRANSFER_OUT:
+			txnString = formatTransferTransaction();
+			break;
+		default:
+			txnString = formatDefaultTransaction();
+			break;
+		}
+		return txnString;
+	}
+
+	private String formatTransferTransaction() {
 		StringBuilder sb = new StringBuilder();
-		appendFieldValueToOutput("D", txn.getDate(), sb);
-		appendFieldValueToOutput("N", txn.getAction(), sb);
-		appendFieldValueToOutput("Y", txn.getSecurity(), sb);
-		appendFieldValueToOutput("I", txn.getPrice(), sb);
-		appendFieldValueToOutput("Q", txn.getQuantity(), sb);
-		appendFieldValueToOutput("T", txn.getTotal(), sb);
-		appendFieldValueToOutput("O", txn.getCommission(), sb);
-		appendFieldValueToOutput("M", txn.getMemo(), sb);
+		Utils.appendFieldValueToOutput("D", txn.getDate(), sb);
+		Utils.appendFieldValueToOutput("N", txn.getAction(), sb);
+		Utils.appendFieldValueToOutput("P", "Transfer", sb);
+		Utils.appendCurrencyValueToOutput("T", txn.getTotal(), sb);
+		Utils.appendFieldValueToOutput("L", txn.getCategory(), sb);
+		Utils.appendCurrencyValueToOutput("$", txn.getTotal(), sb);
 		return sb.toString();
 	}
-	
+
+	private String formatDefaultTransaction() {
+		StringBuilder sb = new StringBuilder();
+		Utils.appendFieldValueToOutput("D", txn.getDate(), sb);
+		Utils.appendFieldValueToOutput("N", txn.getAction(), sb);
+		Utils.appendFieldValueToOutput("Y", txn.getSecurity(), sb);
+		Utils.appendCurrencyValueToOutput("I", txn.getPrice(), sb);
+		Utils.appendFieldValueToOutput("Q", txn.getQuantity(), sb);
+		Utils.appendCurrencyValueToOutput("T", txn.getTotal(), sb);
+		Utils.appendCurrencyValueToOutput("O", txn.getCommission(), sb);
+		Utils.appendFieldValueToOutput("M", txn.getMemo(), sb);
+		return sb.toString();
+	}
+
+	private String formatDividendTransaction() {
+		StringBuilder sb = new StringBuilder();
+		Utils.appendFieldValueToOutput("D", txn.getDate(), sb);
+		Utils.appendFieldValueToOutput("N", txn.getAction(), sb);
+		Utils.appendFieldValueToOutput("Y", txn.getSecurity(), sb);
+		Utils.appendCurrencyValueToOutput("I", txn.getPrice(), sb);
+		Utils.appendCurrencyValueToOutput("T", txn.getTotal(), sb);
+		Utils.appendFieldValueToOutput("M", txn.getMemo(), sb);
+		return sb.toString();
+	}
+
 }

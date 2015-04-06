@@ -4,10 +4,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.math.BigDecimal;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,10 +23,10 @@ public class QifWriterTest {
 		Writer writer = new StringWriter();
 		QifWriter qifWriter = new QifWriter(writer);
 		List<QifTransaction> txnList = new ArrayList<QifTransaction>();
-		QifAccount account = new QifAccount(QifAccountTypeEnum.PORTFOLIO,
-				"Foo Portfolio", "My description", BigDecimal.valueOf(1000.07d));
+		QifAccount account = TestUtils.buildPortfolioAccount();
 		qifWriter.write(account, txnList);
-		String expected = readTestSampleFile("src/test/resources/writer/invst_account_empty.qif");
+		String expected = TestUtils
+				.readTestSampleFile("src/test/resources/writer/invst_account_empty.qif");
 		Assert.assertEquals("Test account", expected, writer.toString());
 	}
 
@@ -39,13 +35,14 @@ public class QifWriterTest {
 		Writer writer = new StringWriter();
 		QifWriter qifWriter = new QifWriter(writer);
 		List<QifTransaction> txnList = new ArrayList<QifTransaction>();
-		QifInvestment invst = buildInvst(10.952d, 100d, 9.95d);
+		QifInvestment invst = TestUtils.buildInvst(10.952d, 100d, 9.95d);
 		txnList.add(invst);
 		QifAccount account = new QifAccount(QifAccountTypeEnum.PORTFOLIO,
 				"Foo Portfolio", "My description", BigDecimal.valueOf(1000.07d));
 		qifWriter.write(account, txnList);
 
-		String expected = readTestSampleFile("src/test/resources/writer/invst_account_single.qif");
+		String expected = TestUtils
+				.readTestSampleFile("src/test/resources/writer/invst_account_single.qif");
 		Assert.assertEquals("Test account", expected, writer.toString());
 	}
 
@@ -54,11 +51,11 @@ public class QifWriterTest {
 		Writer writer = new StringWriter();
 		QifWriter qifWriter = new QifWriter(writer);
 		List<QifTransaction> txnList = new ArrayList<QifTransaction>();
-		QifInvestment invst = buildInvst(10.952d, 100d, 9.95d);
+		QifInvestment invst = TestUtils.buildInvst(10.952d, 100d, 9.95d);
 		invst.setMemo("Buy 100 FOOB for $10.952. Commission: $9.95");
 		txnList.add(invst);
 
-		invst = buildInvst(13.05d, 100d, 9.95d);
+		invst = TestUtils.buildInvst(13.05d, 100d, 9.95d);
 		invst.setMemo("Sell 100 FOOB for capital gain. Commission: $9.95");
 		invst.setAction(QifInvestmentAction.SELL.getText());
 		invst.setDate(new LocalDate(2014, 4, 5));
@@ -69,35 +66,23 @@ public class QifWriterTest {
 				BigDecimal.valueOf(0.12d));
 		txnList.add(ii);
 
+		invst = TestUtils.buildDividend(12.99d, 7.5d, ".15 on 50 shares");
+		invst.setDate(new LocalDate(2014, 5, 30));
+		txnList.add(invst);
+
+		invst = new QifInvestment();
+		invst.setDate(new LocalDate(2014, 6, 13));
+		invst.setAction(QifInvestmentAction.TRANSFER_IN.getText());
+		invst.setTotal(BigDecimal.valueOf(500d));
+		invst.setCategory("[Test Checking]");
+		txnList.add(invst);
+
 		QifAccount account = new QifAccount(QifAccountTypeEnum.PORTFOLIO,
 				"Foo Portfolio", "My description", BigDecimal.valueOf(1000.07d));
 		qifWriter.write(account, txnList);
 
-		String expected = readTestSampleFile("src/test/resources/writer/invst_account_multi.qif");
+		String expected = TestUtils
+				.readTestSampleFile("src/test/resources/writer/invst_account_multi.qif");
 		Assert.assertEquals("Test account", expected, writer.toString());
 	}
-
-	/**
-	 * http://stackoverflow.com/a/326440/980454
-	 */
-	private static String readTestSampleFile(String path) throws IOException {
-		Charset encoding = StandardCharsets.ISO_8859_1;
-		byte[] encoded = Files.readAllBytes(Paths.get(path));
-		return new String(encoded, encoding);
-	}
-
-	private static QifInvestment buildInvst(double price, double quantity,
-			double commission) {
-		QifInvestment invst = new QifInvestment();
-		invst.setAction(QifInvestmentAction.BUY.getText());
-		invst.setCommission(BigDecimal.valueOf(commission));
-		invst.setDate(new LocalDate(2014, 3, 30));
-		invst.setMemo("Hello memo");
-		invst.setPrice(BigDecimal.valueOf(price));
-		invst.setQuantity(BigDecimal.valueOf(quantity));
-		invst.setSecurity("Foo Bar Chemicals");
-		invst.setTotal(BigDecimal.valueOf((quantity * price) + commission));
-		return invst;
-	}
-
 }

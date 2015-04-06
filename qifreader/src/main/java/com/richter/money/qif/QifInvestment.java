@@ -9,11 +9,16 @@ public class QifInvestment extends QifTransaction {
 	private BigDecimal quantity;
 	private String security;
 	private BigDecimal commission;
+	private String category;
 
 	public String getAction() {
 		return action;
 	}
-	
+
+	public String getCategory() {
+		return category;
+	}
+
 	public BigDecimal getCommission() {
 		return commission;
 	}
@@ -34,6 +39,20 @@ public class QifInvestment extends QifTransaction {
 		this.action = action;
 	}
 
+	/**
+	 * Note: Transfer In or Transfer Out actions use this field to indicate the
+	 * destination when the value is wrapped like this: <code>[Checking]</code>
+	 * 
+	 * @param category
+	 */
+	public void setCategory(String category) {
+		this.category = category;
+	}
+
+	public void setCommission(BigDecimal commission) {
+		this.commission = commission;
+	}
+
 	public void setPrice(BigDecimal price) {
 		this.price = price;
 	}
@@ -44,9 +63,5 @@ public class QifInvestment extends QifTransaction {
 
 	public void setSecurity(String security) {
 		this.security = security;
-	}
-
-	public void setCommission(BigDecimal commission) {
-		this.commission = commission;
 	}
 }

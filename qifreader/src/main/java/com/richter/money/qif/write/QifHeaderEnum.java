@@ -1,7 +1,7 @@
 package com.richter.money.qif.write;
 
 public enum QifHeaderEnum {
-	ACCOUNT("!Type:Account"), INVESTMENT("!Type:Invst");
+	ACCOUNT("!Type:Account"), INVESTMENT("!Type:Invst"), CASH("!Type:Cash");
 	private String text;
 
 	private QifHeaderEnum(String text) {

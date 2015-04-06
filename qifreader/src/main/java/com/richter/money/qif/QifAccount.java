@@ -3,6 +3,7 @@ package com.richter.money.qif;
 import java.math.BigDecimal;
 
 import com.richter.money.qif.write.QifAccountTypeEnum;
+import com.richter.money.qif.write.QifHeaderEnum;
 
 /**
  * Immutable class represents an Account in QIF specification
@@ -39,5 +40,13 @@ public class QifAccount extends QifTransaction {
 	
 	public BigDecimal getBalance() {
 		return balance;
+	}
+
+	public QifHeaderEnum getHeader() {
+		if(type == QifAccountTypeEnum.PORTFOLIO) {
+			return QifHeaderEnum.INVESTMENT;
+		} else {
+			throw new IllegalStateException("Unknown account");
+		}
 	}	
 }

@@ -20,9 +20,9 @@ public class QifInterestIncomeRecord extends AbstractQifRecord {
 	@Override
 	public String formatTransaction() {
 		StringBuilder sb = new StringBuilder();
-		appendFieldValueToOutput("D", txn.getDate(), sb);
-		appendFieldValueToOutput("N", txn.getAction(), sb);
-		appendFieldValueToOutput("T", txn.getTotal(), sb);
+		Utils.appendFieldValueToOutput("D", txn.getDate(), sb);
+		Utils.appendFieldValueToOutput("N", txn.getAction(), sb);
+		Utils.appendCurrencyValueToOutput("T", txn.getTotal(), sb);
 		return sb.toString();
 	}
 }
